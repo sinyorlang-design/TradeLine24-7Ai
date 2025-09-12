@@ -1,0 +1,113 @@
+PATCH-Node — Pin Node to 20.19.5 everywhere (idempotent)
+
+Objective
+Silence the EBADENGINE warning in BUILD_PROOF.md by standardizing Node to v20.19.5 across the repo and environments (Replit + Render) without touching app logic.
+
+Preflight (read-only)
+
+If present, read BUILD_AUDIT.md to see current Node pins/notes.
+
+Detect:
+
+.nvmrc content (if exists)
+
+package.json.engines.node (if exists)
+
+replit.nix Node package (if exists)
+
+render.yaml envVars → NODE_VERSION (if exists)
+
+Current node -v in workspace
+
+Edits (only when missing/mismatched)
+
+.nvmrc
+
+If file missing or not exactly v20.19.5, write:
+
+v20.19.5
+
+
+If already v20.19.5, skip.
+
+package.json → engines.node
+
+If engines.node missing or differs, set (preserve other fields):
+
+"engines": { "node": ">=20.19.5 <21" }
+
+
+If already matches, skip.
+
+replit.nix (only if file exists)
+
+If it pins another Node, update just the Node dep to:
+
+{ pkgs }: {
+  deps = [ pkgs.nodejs-20_x pkgs.nodePackages.npm pkgs.cacert pkgs.git ];
+}
+
+
+If no replit.nix in project, skip.
+
+render.yaml (only if file exists; otherwise skip—dashboard-managed)
+
+Ensure:
+
+envVars:
+  - key: NODE_VERSION
+    value: 20.19.5
+
+
+Do not add render.yaml if it doesn’t exist.
+
+Validation (do not proceed if any step fails)
+
+Run node -v in the workspace and record the output.
+
+If it is not v20.19.5 but the files above are updated, note: “Replit environment rebuild may be required for replit.nix changes; config is correct.” (Do not attempt heavy rebuilds; just report.)
+
+Run:
+
+npm ci && npm run build
+
+
+Confirm no EBADENGINE warnings now that engines and pins align.
+
+Idempotency rules
+
+For each file, skip edits if already correct and write “SKIPPED (already satisfied)” in the PR description.
+
+Do not touch any other files, scripts, or logic. No changes to brand/prompt/hotline code.
+
+Commit & PR
+
+Create branch: chore/pin-node-20-19-5
+
+Commit only changed files among: .nvmrc, package.json, replit.nix, render.yaml.
+
+Message: chore(node): pin Node 20.19.5 across environments
+
+Open PR with a short summary:
+
+Before/after of each file touched
+
+node -v result
+
+npm ci && npm run build summary (one line)
+
+Note if Render is dashboard-managed (no render.yaml) and that NODE_VERSION=20.19.5 should be set in Render env UI.
+
+Acceptance
+
+.nvmrc = v20.19.5
+
+package.json.engines.node = >=20.19.5 <21
+
+If replit.nix exists → uses pkgs.nodejs-20_x
+
+If render.yaml exists → NODE_VERSION: 20.19.5
+
+Local npm ci && npm run build completes with no EBADENGINE
+
+PR contains only the minimal diffs above
