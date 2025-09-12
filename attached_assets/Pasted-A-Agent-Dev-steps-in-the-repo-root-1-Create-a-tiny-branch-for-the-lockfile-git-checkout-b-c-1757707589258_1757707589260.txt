@@ -1,0 +1,85 @@
+A) Agent / Dev steps (in the repo root)
+# 1) Create a tiny branch for the lockfile
+git checkout -b chore/lockfile-ci
+
+# 2) Regenerate the lockfile from current package.json
+rm -rf node_modules package-lock.json
+npm install
+
+# 3) Ensure the lockfile will be versioned
+#    (remove it from .gitignore if present)
+sed -i.bak '/package-lock.json/d' .gitignore || true
+
+# 4) Commit
+git add package-lock.json .gitignore
+git commit -m "chore(ci): add package-lock.json for Render npm ci"
+
+# 5) Push & open PR
+git push -u origin chore/lockfile-ci
+
+
+Acceptance for PR:
+
+PR contains only package-lock.json (and .gitignore if we had to un-ignore it).
+
+CI locally passes:
+
+rm -rf node_modules
+npm ci --include=dev
+npm run build
+
+B) After merge to main (Render)
+
+Render → Settings → Clear build cache.
+
+Trigger Deploy latest.
+
+Build should show:
+
+npm ci installs quickly (no EUSAGE dump)
+
+vite build runs and emits dist/…
+
+Service boots with node server.mjs.
+
+Acceptance for Render:
+
+Build stage completes without the The 'npm ci' command can only install… message.
+
+Health endpoints /healthz, /readyz return 200.
+
+Preview works.
+
+Contingency (if you do NOT want a lockfile)
+
+Change the Render Build Command to install without CI mode:
+
+NPM_CONFIG_PRODUCTION=false npm install --no-audit --no-fund && npm run build
+
+
+Then Clear build cache → Deploy.
+
+Note: This removes the determinism of npm ci. Preferred is the lockfile route above.
+
+Replit Agent “patch-only” prompt (copy/paste)
+
+Task: Fix Render build by adding a proper package-lock.json and ensuring it’s tracked. Do not change any app code, configs, or scripts beyond this scope.
+
+Steps:
+
+Create branch chore/lockfile-ci.
+
+Run rm -rf node_modules package-lock.json && npm install to generate a fresh lockfile.
+
+Ensure .gitignore does not exclude package-lock.json (remove that line if present).
+
+Commit only package-lock.json (and .gitignore if modified) with message:
+chore(ci): add package-lock.json for Render npm ci.
+
+Open a PR.
+
+Locally verify rm -rf node_modules && npm ci --include=dev && npm run build passes.
+
+Do not touch any other files.
+
+Done when: PR merged → Render cache cleared → next deploy builds successfully with npm ci.
