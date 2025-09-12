@@ -1,2 +1,10 @@
 main {
 }
+/* TL247 Canon Font (idempotent) */
+@font-face {
+  font-family: "BrandFont";
+  src: url("/assets/fonts/BrandFont.woff2") format("woff2");
+  font-display: swap;
+}
+:root { --tl-serif: "BrandFont", Georgia, serif; }
+body { font-family: var(--tl-serif); }
