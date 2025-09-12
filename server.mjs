@@ -23,8 +23,8 @@ app.get(nonApiSpa, (_req, res) => {
   res.sendFile(path.join(dist, "index.html"));
 });
 
-app.listen(PORT, HOST, () =>
-  console.log(`✓ Serving dist on http://${HOST}:${PORT}`)
+app.listen(PORT, '0.0.0.0', () =>
+  console.log(`✓ Serving dist on http://0.0.0.0:${PORT}`)
 );
 // 1) parse Twilio form posts (put near your other app.use lines)
 app.use(express.urlencoded({ extended: false }));
