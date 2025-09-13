@@ -1,0 +1,111 @@
+1) PATCH-LOCKFILE
+
+Goal: Ensure package-lock.json exists, is not ignored, and is committed to main.
+
+Prompt to Agent
+
+Scope: repo root only. Do nothing if already satisfied.
+Steps (idempotent):
+
+Verify we’re at repo root: package.json present. If not, stop with error.
+
+If .gitignore contains package-lock.json, remove that line only.
+
+If package-lock.json is missing, run npm install --package-lock-only (no other changes).
+
+Stage and commit package-lock.json with message:
+chore(ci): add package-lock.json for deterministic Render builds
+
+Push to origin main.
+Do not modify any other files.
+Success criteria (print):
+
+“LOCKFILE_OK”
+
+Commit SHA (or “UNCHANGED” if no changes)
+
+First 3 lines of git ls-files | grep package-lock.json
+
+Why this prompt works: It aligns with npm ci requirements and commits the canonical lockfile to the source Render uses. 
+npm Docs
+
+2) RENDER-BUILD-CONFIG
+
+Goal: Keep Render’s build deterministic and compatible with our Vite build and Node pin.
+
+Prompt to Agent
+
+Scope: Documentation output only (no code edits).
+Check & print recommended Render settings:
+
+Build Command: npm ci && npm run build
+
+Start Command: node server.mjs
+
+Environment:
+
+NODE_VERSION=20.19.5 (already set per logs; confirm)
+
+Ensure we are not setting NPM_CONFIG_PRODUCTION=true (Vite is a dev dep)
+Output a short checklist for me to follow in the Render Dashboard including:
+
+“Manual Deploy ▸ Clear build cache & deploy”
+
+Where to verify logs show vite build + server listening on $PORT.
+Citations: include links to Render docs on version pinning and cache clearing.
+
+(References: Render docs on Node version & manual/clear-cache flows.) 
+Render
++2
+Render
++2
+
+3) RENDER-REDEPLOY
+
+Goal: Kick a clean deploy and validate health.
+
+Prompt to Agent
+
+Scope: Post-deploy verification only (no code edits).
+Actions:
+
+Instruct me (short) to click “Manual Deploy ▸ Clear build cache & deploy” in Render.
+
+After deploy finishes, run and print expected responses (as text to the console):
+
+GET /healthz → 200 ok
+
+GET /readyz → 200 ready
+Success criteria (print): “RENDER_DEPLOY_OK” plus the HTTP status lines observed.
+
+4) TWI-EDGE-SMOKE (optional once Render is green)
+
+Goal: Validate the voice webhook path returns TwiML.
+
+Prompt to Agent
+
+Scope: Read-only call.
+Action: curl -s https://<render-domain>/voice/answer | head -n 2 and print output.
+Success criteria: First line contains <Response>.
+
+5) PREVENT-REGRESSION
+
+Goal: Ensure we never lose the lockfile again.
+
+Prompt to Agent
+
+Scope: Add GitHub Action only if it doesn’t exist.
+Steps:
+
+Create .github/workflows/ci.yml with a single job that runs on push/PR:
+
+Node 20.19.5
+
+test -f package-lock.json
+
+npm ci
+
+npm run build
+
+Commit with message: ci: enforce lockfile + build parity with Render
+Success criteria: print the new workflow path and commit SHA.
