@@ -1,0 +1,146 @@
+ROLE: Senior Full-Stack DevOps (Replit Agent 3)
+GOAL: Set/verify the hotline greeting in Supabase for +15878839797 without touching existing app code. Idempotent. No dupes.
+
+CONSTRAINTS
+- Do NOT expose secrets in logs.
+- Use existing deps; if missing, add only "@supabase/supabase-js".
+- Use env: SUPABASE_URL, SUPABASE_SERVICE_ROLE.
+- Target table/columns: public.hotline_numbers(phone_e164 PK, org_id FK, agent_name, locale, tagline_on, greeting_template)
+- Greeting template to apply:
+  Hi, this is {{biz}} support, powered by TradeLine 24/7! I'm {{agent}}, always here to help.
+
+INPUTS (override if needed)
+- PHONE="+15878839797"
+- ORG_NAME="Apex Business Systems"
+- AGENT_NAME="Nova"
+- LOCALE="en-CA"
+- TAGLINE_ON=true
+- TEMPLATE="Hi, this is {{biz}} support, powered by TradeLine 24/7! I'm {{agent}}, always here to help."
+
+TASKS
+1) Create a temporary script at scripts/set-greeting.mjs that:
+   - Imports createClient from "@supabase/supabase-js".
+   - Creates an admin client with SUPABASE_URL + SUPABASE_SERVICE_ROLE (persistSession:false).
+   - Ensures an organization row exists with name ORG_NAME (insert if missing, reuse if present).
+     Table: public.organizations(name, slug, settings). Slug = lowercased, hyphenated name; on conflict(name) do nothing; then select id.
+   - Upserts into public.hotline_numbers:
+       phone_e164 = PHONE
+       org_id = org.id
+       agent_name = AGENT_NAME
+       locale = LOCALE
+       tagline_on = TAGLINE_ON
+       greeting_template = TEMPLATE
+     Use upsert({ onConflict: 'phone_e164' }).
+   - After upsert, call the RPC:
+       resolve_greeting(p_phone_e164 => PHONE)
+     and log ONLY the resolved greeting string (no secrets).
+
+2) If "@supabase/supabase-js" is not in package.json, add it and run npm install.
+
+3) Run the script:
+   node scripts/set-greeting.mjs
+
+4) Verify result:
+   - The script should print the final greeting, e.g.:
+     "Hi, this is Apex Business Systems support, powered by TradeLine 24/7! I'm Nova, always here to help."
+   - If not, fail the job with a clear message.
+
+5) Clean-up: keep the script in repo (useful later), but do not alter existing server code or routes.
+
+CODE (exact content for scripts/set-greeting.mjs)
+---8<---
+import { createClient } from "@supabase/supabase-js";
+
+const {
+  SUPABASE_URL,
+  SUPABASE_SERVICE_ROLE,
+  PHONE = "+15878839797",
+  ORG_NAME = "Apex Business Systems",
+  AGENT_NAME = "Nova",
+  LOCALE = "en-CA",
+  TAGLINE_ON = "true",
+  TEMPLATE = "Hi, this is {{biz}} support, powered by TradeLine 24/7! I'm {{agent}}, always here to help.",
+} = process.env;
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
+  console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE");
+  process.exit(1);
+}
+
+const supa = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE, { auth: { persistSession: false } });
+
+// basic slugify
+function slugify(s) {
+  return String(s).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+(async () => {
+  // 1) ensure org exists (insert-or-select)
+  const orgSlug = slugify(ORG_NAME);
+  // Try select first
+  let { data: org, error: selErr } = await supa
+    .from("organizations")
+    .select("id")
+    .eq("name", ORG_NAME)
+    .limit(1)
+    .maybeSingle();
+
+  if (!org && !selErr) {
+    const { error: insErr } = await supa
+      .from("organizations")
+      .insert([{ name: ORG_NAME, slug: orgSlug, settings: {} }]);
+    if (insErr) {
+      console.error("Failed to ensure organization:", insErr.message);
+      process.exit(1);
+    }
+    ({ data: org } = await supa
+      .from("organizations")
+      .select("id")
+      .eq("name", ORG_NAME)
+      .limit(1)
+      .single());
+  }
+  if (!org?.id) {
+    console.error("Organization id not found after upsert.");
+    process.exit(1);
+  }
+
+  // 2) upsert hotline row
+  const upsertPayload = {
+    phone_e164: PHONE,
+    org_id: org.id,
+    agent_name: AGENT_NAME,
+    locale: LOCALE,
+    tagline_on: String(TAGLINE_ON).toLowerCase() === "true",
+    greeting_template: TEMPLATE,
+  };
+
+  const { error: upErr } = await supa
+    .from("hotline_numbers")
+    .upsert(upsertPayload, { onConflict: "phone_e164" });
+  if (upErr) {
+    console.error("Failed to upsert hotline:", upErr.message);
+    process.exit(1);
+  }
+
+  // 3) verify via RPC
+  const { data: greeting, error: rpcErr } = await supa.rpc("resolve_greeting", {
+    p_phone_e164: PHONE,
+  });
+  if (rpcErr) {
+    console.error("resolve_greeting RPC failed:", rpcErr.message);
+    process.exit(1);
+  }
+
+  console.log(greeting || "(no greeting returned)");
+})();
+---8<---
+
+EXPECTED OUTPUT
+- A single line printed with the resolved greeting using the org’s name and agent name.
+
+ROLLBACK (if needed)
+- Re-run the script with a different TEMPLATE, AGENT_NAME=false/true, or TAGLINE_ON=false. The upsert is idempotent.
+
+NOW EXECUTE.
+```0

@@ -1,0 +1,31 @@
+{
+  "name": "tradeline247",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "server.mjs",
+  "engines": {
+    "node": ">=20.19.3 <21",
+    "npm": ">=8"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "node server.mjs",
+    "preview": "vite preview --host 0.0.0.0 --port 5000"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
+    "express": "^4.19.2",
+    "node-fetch": "^3.3.2",
+    "openai": "^4.56.0",
+    "resend": "^3.2.0",
+    "tsscmp": "^1.0.6",
+    "twilio": "^5.3.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.2",
+    "vite": "^5.4.8"
+  }
+}
