@@ -9,6 +9,28 @@ import { Resend } from "resend";
 import twilio from "twilio";
 import { createClient } from "@supabase/supabase-js";
 
+// add near top
+import helmet from "helmet";
+const isProd = process.env.NODE_ENV === "production";
+
+app.use(helmet({
+  frameguard: false,
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      "default-src": ["'self'"],
+      "script-src": isProd ? ["'self'"] : ["'self'","'unsafe-inline'"],
+      "style-src": ["'self'","'unsafe-inline'"],
+      "img-src": ["'self'","data:"],
+      "font-src": ["'self'","data:"],
+      "connect-src": ["'self'","https://*.supabase.co"],
+      "frame-ancestors": isProd
+        ? ["'self'"]
+        : ["'self'","https://*.replit.com","https://*.repl.co","https://*.replit.dev"]
+    }
+  }
+);
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -335,5 +357,6 @@ app.use(helmet({
         : ["'self'","https://*.replit.com","https://*.repl.co","https://*.replit.dev"]
     }
   }
+
 
 });
