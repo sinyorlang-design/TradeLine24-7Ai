@@ -1,0 +1,46 @@
+services:
+# 1) API for Twilio webhooks + background work
+- type: web
+  name: tradeline247-api
+  env: node
+  plan: starter
+  region: oregon
+  numInstances: 2            # active-active for resilience
+  autoDeploy: true
+  buildCommand: npm install --include=dev && npm run build
+  startCommand: node server.mjs
+  healthCheckPath: /healthz   # we already serve this
+  envVars:
+    - key: NODE_ENV
+      value: production
+    - key: HOST
+      value: 0.0.0.0
+    - key: PORT
+      value: 5000
+
+# 2) Static site on Render's CDN (builds Vite and publishes /dist)
+- type: static
+  name: tradeline247-web
+  autoDeploy: true
+  buildCommand: npm ci && npm run build
+  publishPath: dist
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
