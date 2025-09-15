@@ -90,7 +90,16 @@ function handleInbound(req, res) {
   g.say({ voice:"Polly.Joanna-Neural" }, ssml(`You can say sales, support, or operator.`));
 
   // if nothing said, continue and bridge
-  r.say({ voice:"Polly.Joanna-Neural" }, ssml(`One moment while I connect you.`));
+  { voice: "Polly.Joanna-Neural" },
+  ssml(`Hi, you’ve reached ${biz()}. One moment while I connect you.`)
+  // helper already in your file:
+  const ssml = (s) => `<speak><prosody rate="90%" pitch="+1st">${s.trim()}</prosody></speak>`;
+
+  r.say(
+    { voice: "Polly.Joanna-Neural" },
+    ssml(`Hi, you’ve reached ${biz()}. One moment while I connect you.`)
+  );
+
   r.dial({
     callerId: CALLER(req),
     timeout: 25,
