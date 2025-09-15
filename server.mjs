@@ -13,6 +13,7 @@ const must = (k) => {
   const v = process.env[k] || "";
   if (!v) throw new Error(`Missing env ${k}`);
   return v;
+  
 };
 async function startupChecks() {
   // Required envs
@@ -62,8 +63,10 @@ const ssml = (s) => `<speak><prosody rate="92%" pitch="+2st">${s.trim()}</prosod
 
 const app   = express();
 const isProd= process.env.NODE_ENV === "production";
-const PORT  = Number(process.env.PORT || 5000);
-const HOST  = process.env.HOST || "0.0.0.0";
+const PORT = process.env.PORT || 5000;
+const HOST = process.env.HOST || "0.0.0.0";
+app.listen(PORT, HOST, () => {
+  console.log(`✓ Server running on http://${HOST}:${PORT}`);
 
 // ---------- security & middleware ----------
 app.disable("x-powered-by");
