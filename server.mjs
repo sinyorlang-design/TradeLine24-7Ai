@@ -204,7 +204,7 @@ app.post("/voice/recording-status", urlencoded, (_req,res)=>res.sendStatus(204))
 app.use(express.static(dist, { index:false, maxAge: isProd ? "1y" : 0 }));
 app.get("*", (_req,res)=>res.sendFile(path.join(dist,"index.html")));
 
- await startupChecks();
+  await startupChecks();
 
 // ---------- listener ----------
 app.listen(PORT, HOST, ()=>console.log(`✓ Serving /dist and Twilio webhooks on http://${HOST}:${PORT}`));
