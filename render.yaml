@@ -24,6 +24,12 @@ services:
   autoDeploy: true
   buildCommand: npm ci && npm run build
   publishPath: dist
+  git init
+  git add -A
+  git commit -m "chore: add Render blueprint"
+  git branch -M main
+  git remote add origin https://github.com/<YOUR_GH_USERNAME>/<YOUR_REPO>.git
+  git push -u origin main
 
 
 

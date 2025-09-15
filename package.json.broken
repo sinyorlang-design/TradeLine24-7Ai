@@ -1,0 +1,79 @@
+{
+  "name": "tradeline247",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "server.mjs",
+  "engines": {
+    "node": ">=20.19.3 <21",
+    "npm": ">=8"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "node server.mjs",
+    "preview": "vite preview --host 0.0.0.0 --port 5000"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "compression": "^1.7.4",
+    "express-rate-limit": "^7.3.0",
+    "twilio": "^4.22.0",
+    "node-fetch": "^3.3.2",
+    "openai": "^4.56.0",
+    "resend": "^3.2.0",
+    "tsscmp": "^1.0.6",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.2",
+    "vite": "^5.4.8"
+  }
+  # render.yaml — TradeLine24/7 Blueprint (2 services: API + Web)
+  services:
+    - type: web
+      name: tradeline247-api
+      env: node
+      buildCommand: |
+        npm ci || npm i
+        npm run build
+      startCommand: node server.mjs
+      healthCheckPath: /healthz
+      plan: starter
+      numInstances: 2
+      envVars:
+        - key: NODE_VERSION
+          value: 20
+        - key: HOST
+          value: 0.0.0.0
+        - key: PORT
+          value: 10000   # Render injects PORT; server reads process.env.PORT
+        # --- Paste your real secrets below (Render Dashboard → Environment) ---
+        - key: OPENAI_API_KEY
+          sync: false
+        - key: SUPABASE_URL
+          sync: false
+        - key: SUPABASE_SERVICE_ROLE_KEY
+          sync: false
+        - key: SUPABASE_ANON_KEY
+          sync: false
+        - key: EMAIL_FROM
+          sync: false
+        - key: RESEND_API_KEY
+          sync: false
+        - key: TWILIO_ACCOUNT_SID
+          sync: false
+        - key: TWILIO_AUTH_TOKEN
+          sync: false
+        - key: TWILIO_NUMBER
+          sync: false
+
+    - type: static
+      name: tradeline247-web
+      buildCommand: |
+        npm ci || npm i
+        npm run build
+      publishPath: dist
+
