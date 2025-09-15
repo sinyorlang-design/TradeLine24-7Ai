@@ -204,14 +204,18 @@ app.post("/voice/after-dial", urlencoded, (req,res)=>{
 app.post("/voice/recording-status", urlencoded, (_req,res)=>res.sendStatus(204));
 
 // ---------- static + SPA fallback ----------
-app.use(express.static(dist, { index:false, maxAge: isProd ? "1y" : 0 }));
-app.get("*", (_req,res)=>res.sendFile(path.join(dist,"index.html")));
+ app.use(express.static(dist, { index:false, maxAge: isProd ? "1y" : 0 }));
+ app.get("*", (_req, res) => res.sendFile(path.join(dist, "index.html")));
 
-  await startupChecks();
+-// (REMOVE) any stray / experimental boot logic
+-// await startupChecks();
+-
+-// (REMOVE) any function startupChecks() { ... } block if present
 
-// ---------- listener ----------
-app.listen(PORT, HOST, ()=>console.log(`✓ Serving /dist and Twilio webhooks on http://${HOST}:${PORT}`));
-
+ // ---------- listener ----------
+ app.listen(PORT, HOST, () =>
+   console.log(`✓ Serving /dist and Twilio webhooks on http://${HOST}:${PORT}`)
+ );
 
 
 
