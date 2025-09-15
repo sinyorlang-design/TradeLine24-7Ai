@@ -1,16 +1,20 @@
 #!/usr/bin/env node
 const fs = require("fs");
 let ok = true;
-const pkg = JSON.parse(fs.readFileSync("package.json","utf8"));
-function err(s){ console.error("✗", s); ok=false; }
-function okmsg(s){ console.log("•", s); }
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+const needDeps = ["express","compression","helmet","express-rate-limit","hpp"];
 
-if (!pkg.dependencies?.express) err('Runtime dep "express" must be under "dependencies" (not devDependencies).');
-if (!pkg.scripts?.start?.includes("node server.mjs")) err('scripts.start should be "node server.mjs".');
+const err = m => (console.error("✗", m), ok=false);
+const info = m => console.log("•", m);
 
-const must = ["OPENAI_API_KEY","VITE_SUPABASE_URL","VITE_SUPABASE_ANON_KEY"];
-const missing = must.filter(k => !process.env[k]);
-if (missing.length) okmsg("Missing non-fatal env (set in Render/Replit when ready): " + missing.join(", "));
+for (const d of needDeps) {
+  if (!pkg.dependencies || !pkg.dependencies[d]) err(`Runtime dep "${d}" must be in dependencies.`);
+}
+if (!pkg.scripts?.start || !/node\s+server\.mjs/.test(pkg.scripts.start)) err(`"start" script must be "node server.mjs".`);
+
+const mustEnv = ["OPENAI_API_KEY","SUPABASE_URL","SUPABASE_ANON_KEY","SUPABASE_SERVICE_ROLE_KEY","EMAIL_FROM"];
+const missing = mustEnv.filter(k => !process.env[k]);
+if (missing.length) info(`Missing non-fatal envs (set when wiring features): ${missing.join(", ")}`);
 
 if (!ok) process.exit(1);
-console.log("✓ Runtime looks sane");
+console.log("✓ Runtime looks sane.");
