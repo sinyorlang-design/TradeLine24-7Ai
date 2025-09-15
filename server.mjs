@@ -1,3 +1,4 @@
+import { applyHardening } from "./scripts/hardening.mjs";
 // server.mjs — hardened, hairpin-safe, human-sounding, production-ready
 import express from "express";
 import helmet from "helmet";
