@@ -7,6 +7,53 @@ import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import twilioPkg from "twilio";
+// --- startup checks & OpenAI probe ---
+import OpenAI from "openai";
+const must = (k) => {
+  const v = process.env[k] || "";
+  if (!v) throw new Error(`Missing env ${k}`);
+  return v;
+};
+async function startupChecks() {
+  // Required envs
+  [
+    "OPENAI_API_KEY",
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "FORWARD_E164",
+    "TWILIO_ACCOUNT_SID",
+    "TWILIO_AUTH_TOKEN"
+  ].forEach(must);
+
+  // OpenAI ping
+  try {
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const r = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: "ping" }],
+      max_tokens: 4
+    });
+    console.log("✓ OpenAI ok:", r.model, "usage:", r.usage?.total_tokens ?? "?");
+  } catch (e) {
+    console.error("✗ OpenAI probe failed:", e.status || "", e.message);
+    // Don’t crash prod; just log loudly.
+  }
+}
+// expose a diag route too
+app.get("/diag/openai", async (_req, res) => {
+  try {
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const r = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: "ping" }],
+      max_tokens: 4
+    });
+    res.json({ ok: true, model: r.model, usage: r.usage });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
+});
+
 
 const { twiml: { VoiceResponse } } = twilioPkg;
 
