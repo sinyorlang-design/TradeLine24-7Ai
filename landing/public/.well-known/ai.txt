@@ -1,0 +1,3 @@
+Name: TradeLine 24/7
+Tagline: Your 24/7 Ai Receptionist!
+Purpose: Instantly capture after-hours calls and send summarized transcripts.

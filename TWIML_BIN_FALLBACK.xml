@@ -1,0 +1,6 @@
+<Response>
+  <Say>Please hold…</Say>
+  <Dial timeout="25" answerOnBridge="true">
+    <Number>+14319900222</Number>
+  </Dial>
+</Response>

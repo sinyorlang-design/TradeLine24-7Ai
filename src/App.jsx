@@ -1,3 +1,7 @@
+import "./theme.css";
+import SettingsFab from "./components/SettingsFab.jsx";
+import { SettingsProvider } from "./context/SettingsContext.jsx";
+import CommandBar from "./src/components/CommandBar.jsx".replace("./src",".");
 import React from "react";
 import "./styles/brand.css";
 export default function App(){

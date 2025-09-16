@@ -13,26 +13,36 @@
     "build": "vite build",
     "start": "node server.mjs",
     "preview": "vite preview --host 0.0.0.0 --port 5000",
-    "prebuild": "node scripts/verify-runtime.cjs || true",
+    "prebuild": "node -e \"if(process.env.SKIP_VERIFY_CANON===\\\"1\\\")process.exit(0)\" && node scripts/verify-canon.js",
     "scan": "npm audit --omit=dev || true",
-    "harden": "node scripts/verify-runtime.cjs"
+    "harden": "node scripts/verify-runtime.cjs",
+    "dev:ui": "vite",
+    "dev:api": "nodemon -q --signal SIGTERM server.mjs",
+    "dev:all": "concurrently -k -n UI,API -c green,blue \"npm:dev:ui\" \"npm:dev:api\"",
+    "preview:prod": "vite build && node server.mjs",
+    "seo": "node scripts/seo-patch.mjs",
+    "landing:dev": "npm --prefix landing run dev",
+    "landing:build": "npm --prefix landing run build",
+    "landing:preview": "npm --prefix landing run preview"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
     "compression": "^1.8.1",
     "express": "^4.21.2",
-    "express-rate-limit": "^7.3.0",
-    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.5.1",
+    "helmet": "^7.2.0",
     "hpp": "^0.2.3",
     "node-fetch": "^3.3.2",
     "openai": "^4.56.0",
     "resend": "^3.2.0",
     "tsscmp": "^1.0.6",
-    "twilio": "^4.22.0",
+    "twilio": "^4.23.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.7.0",
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.10",
     "react-router-dom": "^7.9.1",
     "vite": "^5.4.20"
   }

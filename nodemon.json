@@ -1,0 +1,6 @@
+{
+  "watch": ["server.mjs", "server", "api"],
+  "ignore": ["dist", "node_modules"],
+  "ext": "js,mjs,json",
+  "env": { "HOST": "0.0.0.0", "PORT": "5000", "ALLOW_PREVIEW_IFRAME": "1" }
+}
