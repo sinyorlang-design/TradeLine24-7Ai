@@ -1,15 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App.jsx"; // must exist in src/
-const el = document.getElementById("root");
-if (!el) {
-  const m = document.createElement("pre");
-  m.textContent = "Mount point #root not found.";
-  document.body.appendChild(m);
-} else {
-  ReactDOM.createRoot(el).render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
-}
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import App from "./App.jsx";
+import KitchenSink from "./dev/KitchenSink.jsx";
+const router = createBrowserRouter([
+  { path: "/", element: <App/> },
+  { path: "/dev/kitchen", element: <KitchenSink/> },
+]);
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode><RouterProvider router={router} /></React.StrictMode>
+);

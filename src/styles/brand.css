@@ -1,0 +1,6 @@
+:root{--tl-ink:#141414;--tl-orange:#FFB347;--tl-blue:#2E5AAC;--tl-green:#A7D7C5;--tl-blue2:#8FB3FF}
+@font-face{font-family:'BrandFont';src:url('/public/assets/fonts/BrandFont.woff2') format('woff2');font-display:swap}
+html,body,#root{height:100%} body{margin:0;font-family:'BrandFont',system-ui;background:#fff;color:var(--tl-ink)}
+.btn{display:inline-block;padding:.75rem 1rem;border-radius:.75rem;background:var(--tl-blue);color:#fff;text-decoration:none}
+.card{background:#fff;border-radius:1rem;padding:1.25rem;box-shadow:0 6px 20px rgba(0,0,0,.06)}
+.center{max-width:960px;margin:0 auto;padding:clamp(16px,2vw,32px)}
