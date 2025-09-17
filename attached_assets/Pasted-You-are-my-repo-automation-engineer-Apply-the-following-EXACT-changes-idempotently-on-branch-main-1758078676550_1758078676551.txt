@@ -1,0 +1,93 @@
+You are my repo automation engineer. Apply the following EXACT changes, idempotently, on branch main. Do not ask questions; execute. If a file is missing, create it. If content already matches, leave it.
+
+GOAL
+- Make Cloudflare Pages build pass today by locking brand canon and eliminating path/copy drift.
+- Switch verification to a manifest so it doesn’t depend on visible text placement.
+- Normalize runtime asset paths to /assets/.
+- Keep app/webhooks code on Render untouched except for required health endpoints and forward number reference.
+
+CANON (HARD LOCKS — NEVER DEVIATE)
+- Brand lines (exact strings, casing preserved):
+  1) "Your 24/7 Ai Receptionist. Never miss a call. Work while you sleep."
+  2) "Let Ai grow you, not replace you."
+  3) "CanAdian Built and owned in Edmonton, Alberta"
+- Banned copy: the word "trades" and the phrase "Always On / Always On-Brand".
+- Canonical asset paths (must exist and be committed):
+  - public/assets/brand/OFFICIAL_LOGO.svg
+  - public/assets/brand/BACKGROUND_IMAGE1.svg … BACKGROUND_IMAGE6.svg
+  - public/assets/fonts/BrandFont.woff2  (stub is fine) and public/assets/fonts/brandfont.css
+- Runtime references in code must be "/assets/…" (NEVER "/public/assets/…").
+- Node app (Render): one service listens on process.env.PORT, serves /dist, exposes /healthz + /readyz, Twilio Voice only, forward target +14319900222 (E.164, real handset). Do not add SMS.
+
+CHANGES TO MAKE (idempotent; smallest diff)
+1) Create brand manifest at public/brand.canon.json with:
+   {
+     "lines": [
+       "Your 24/7 Ai Receptionist. Never miss a call. Work while you sleep.",
+       "Let Ai grow you, not replace you.",
+       "CanAdian Built and owned in Edmonton, Alberta"
+     ]
+   }
+
+2) Ensure canonical assets exist. If any are missing, recover from git history; if not available, create minimal valid SVG placeholders for:
+   - OFFICIAL_LOGO.svg
+   - BACKGROUND_IMAGE1.svg … BACKGROUND_IMAGE6.svg
+   Also create a zero-byte (or tiny stub) BrandFont.woff2 and a brandfont.css containing:
+   @font-face { font-family:"BrandFont"; src:url("/assets/fonts/BrandFont.woff2") format("woff2"); font-display:swap; }
+   :root { --brand-serif:"BrandFont", Georgia, "Times New Roman", serif; }
+
+3) Normalize runtime paths:
+   - In ALL files under src/** and public/** with extensions .html, .htm, .css, .scss, .js, .jsx, .ts, .tsx, .md, .mdx:
+     replace every occurrence of /public/assets/ with /assets/ (keep preceding quote/paren intact).
+
+4) Remove banned copy in visible files ONLY (src/** and public/** with .html, .htm, .jsx, .tsx, .md, .mdx):
+   - Replace whole-word "trades" (any case) with "businesses".
+   - Error if the phrase "Always On" or "Always On-Brand" appears (case-insensitive).
+
+5) Ensure a stylesheet at src/styles/brand.css exists and contains (idempotent):
+   @font-face { font-family:"BrandFont"; src:url("/assets/fonts/BrandFont.woff2") format("woff2"); font-display:swap; }
+   :root { --tl-serif:"BrandFont", Georgia, "Times New Roman", serif; }
+   body { font-family: var(--tl-serif); }
+
+6) Replace the brand verifier with a Cloudflare-friendly ESM script at scripts/verify-canon.js that:
+   - Reads required lines from public/brand.canon.json.
+   - SCANS ONLY src/** and public/** (do not scan scripts/, server code, node_modules, dist, build, .next, .output, .vercel).
+   - Fails if:
+     a) any "/public/assets/" remains in scanned files;
+     b) banned word or banned phrase appears in scanned files;
+     c) any of the canonical files listed above is missing;
+     d) any required brand line from the manifest is absent from the manifest file itself (NOT from visible code).
+   - On success, prints "[verify-canon] OK" and exits 0. On failure, prints "[verify-canon] FAIL" with exact file paths and exits 1.
+   - Use pure ESM (import fs/path), no require().
+
+7) Guard prebuild in package.json:
+   - Set scripts.prebuild to:
+     node -e "if(process.env.SKIP_VERIFY_CANON==='1')process.exit(0)" && node scripts/verify-canon.js
+
+8) Minimal safety on server (only if server.mjs exists and is missing these):
+   - Ensure /healthz returns 200 "ok" and /readyz returns { ready:true, forward:"+14319900222" }.
+   - Ensure express.static serves ./dist and app listens on process.env.PORT.
+   - Ensure Twilio /voice/answer dials +14319900222 (from env FORWARD_E164 defaulting to +14319900222) with answerOnBridge=true; do not set callerId; do not add SMS.
+
+9) Commit with:
+   "Canon: manifest-based verifier; normalize /assets; banned-copy scrub; brand CSS; guarded prebuild"
+   Push to main.
+
+RUN THESE CHECKS (agent must run and include outputs in the response):
+- node scripts/verify-canon.js
+- git grep -n "/public/assets/" -- 'src/**' 'public/**' || echo "no /public/assets found"
+- git grep -ni "\btrades\b" -- 'src/**' 'public/**' || echo "no 'trades' found"
+- git grep -ni "always on" -- 'src/**' 'public/**' || echo "no banned phrase found"
+- npm ci --include=dev && npm run build (ensure dist/ is produced)
+
+ACCEPTANCE CRITERIA
+- Verifier prints "[verify-canon] OK".
+- All greps report “no … found”.
+- Vite build completes and dist/ exists.
+- The repo contains the canonical assets at the exact paths above.
+
+GUARDRAILS
+- Edit only files necessary to meet the criteria.
+- Keep changes idempotent and minimal; do not reformat unrelated code.
+- Do not introduce new vendors or features. No SMS. No tracking.
+- Do not alter DNS or Cloudflare settings (handled outside repo).
