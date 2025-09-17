@@ -1,29 +1,44 @@
 <!doctype html>
 <html lang="en">
   <head>
-  <!-- TL247:SEO:BEGIN -->
-<meta name="description" content="Your 24/7 Ai Receptionist! Never miss a call. Work while you sleep.">
-<link rel="canonical" href="/">
-<meta property="og:site_name" content="TradeLine 24/7">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Your 24/7 Ai Receptionist!">
-<meta property="og:description" content="Never miss a call. Work while you sleep.">
-<meta property="og:image" content="/LOGO/OFFICIAL_LOGO.svg">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Your 24/7 Ai Receptionist!">
-<meta name="twitter:description" content="Never miss a call. Work while you sleep.">
-<link rel="manifest" href="/manifest.webmanifest">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"//#org","name":"TradeLine 24/7","url":"/","logo":"/LOGO/OFFICIAL_LOGO.svg"},{"@type":"WebSite","@id":"//#website","url":"/","name":"TradeLine 24/7","description":"Your 24/7 Ai Receptionist! Never miss a call. Work while you sleep.","potentialAction":{"@type":"SearchAction","target":"/?q={search_term_string}","query-input":"required name=search_term_string"}}]}</script>
-<!-- TL247:SEO:END -->
-
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TradeLine 24/7</title>
-    <link rel="preload" href="/public/assets/fonts/BrandFont.woff2" as="font" type="font/woff2" crossorigin>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TradeLine 24/7 — Your 24/7 Ai Receptionist!</title>
+    <meta name="theme-color" content="#FFB347" />
+    <link rel="preload" as="image" href="/assets/brand/OFFICIAL_LOGO.svg" />
+    <style>
+      :root { --orange:#FFB347; --blue:#2E5AAC; --ink:#141414; }
+      html,body,#root{height:100%;}
+      body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
+      .hero{min-height:100%;display:grid;place-items:center;background:var(--orange);}
+      .card{background:rgba(255,255,255,.86);border-radius:24px;padding:32px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.15);max-width:720px;margin:24px;}
+      .logo{height:88px;margin-bottom:18px;}
+      h1{margin:0 0 8px 0;font-size:40px;line-height:1.1;color:var(--ink);}
+      p{margin:0 0 16px 0;font-size:18px;color:#333;}
+      .cta{display:inline-block;padding:12px 18px;border-radius:14px;background:var(--blue);color:#fff;text-decoration:none;font-weight:600}
+      footer{position:fixed;bottom:12px;width:100%;text-align:center;font-size:12px;color:#000a}
+    </style>
   </head>
   <body>
-    <div id="root" data-brand-tagline="Your 24/7 Ai Receptionist!"></div>
+    <div class="hero">
+      <div class="card">
+        <img class="logo" src="/assets/brand/OFFICIAL_LOGO.svg" alt="TradeLine 24/7" />
+        <h1>Your 24/7 Ai Receptionist!</h1>
+        <p>Never miss a call. Work while you sleep.</p>
+        <a class="cta" href="#" onclick="return false;">Get Started</a>
+      </div>
+    </div>
+    <footer>Apex Business Systems • Edmonton, Alberta • Built Canadian</footer>
+    <div id="root"></div>
+
+    <!-- Kill SW on previews so HTML can’t be stale -->
+    <script id="SW-kill-onrender">
+      (()=>{if('serviceWorker'in navigator && location.hostname.endsWith('onrender.com')){
+        navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));
+        try{caches&&caches.keys&&caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));}catch(e){}
+      }})();
+    </script>
+
     <script type="module" src="/src/main.jsx"></script>
-<script id="SW-kill-onrender">(()=>{if("serviceWorker" in navigator && location.hostname.endsWith("onrender.com")){navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));try{caches&&caches.keys&&caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));}catch(e){}}})();</script>
   </body>
 </html>
