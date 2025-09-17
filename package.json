@@ -10,10 +10,10 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/smart-build.mjs",
+    "build": "vite build",
     "start": "node server.mjs",
     "preview": "vite preview --host 0.0.0.0 --port 5000",
-    "prebuild": "node -e \"if(process.env.SKIP_VERIFY_CANON===\\\"1\\\")process.exit(0)\" && node scripts/verify-canon.js",
+    "prebuild": "node -e \"if(process.env.SKIP_VERIFY_CANON==='1'){process.exit(0)}\" && node scripts/verify-canon.cjs || node scripts/verify-canon.js",
     "scan": "npm audit --omit=dev || true",
     "harden": "node scripts/verify-runtime.cjs",
     "dev:ui": "vite",
