@@ -4,8 +4,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host --port 5173",
-    "build": "vite build",
-    "preview": "vite preview --host --port 4173"
+    "build": "node scripts/smart-build.mjs",
+    "preview": "vite preview --host --port 4173",
+    "prebuild": "node scripts/smart-prebuild.mjs",
+    "build:client": "vite build"
   },
   "devDependencies": {
     "vite": "^5.4.7",
