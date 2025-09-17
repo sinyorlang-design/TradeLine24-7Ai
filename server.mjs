@@ -3,6 +3,7 @@ import compression from "compression";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import path from "node:path";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { twiml as TwiML, validateRequest } from "twilio";
 
@@ -111,7 +112,7 @@ app.post("/ops/test-email", async (_, res) => {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const dist = path.join(__dirname, "dist");
-app.use(express.static(dist));
+app.use(express.static(dist,{index:false,etag:true,maxAge:"1y"}));
 app.get("/", (_, res) => res.sendFile(path.join(dist, "index.html")));
 app.get("*", (_, res) => res.sendFile(path.join(dist, "index.html")));
 

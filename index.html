@@ -24,5 +24,6 @@
   <body>
     <div id="root" data-brand-tagline="Your 24/7 Ai Receptionist!"></div>
     <script type="module" src="/src/main.jsx"></script>
+<script id="SW-kill-onrender">(()=>{if("serviceWorker" in navigator && location.hostname.endsWith("onrender.com")){navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));try{caches&&caches.keys&&caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));}catch(e){}}})();</script>
   </body>
 </html>

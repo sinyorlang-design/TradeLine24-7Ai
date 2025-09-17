@@ -24,7 +24,8 @@
     "landing:dev": "npm --prefix landing run dev",
     "landing:build": "npm --prefix landing run build",
     "landing:preview": "npm --prefix landing run preview",
-    "build:client": "vite build"
+    "build:client": "vite build",
+    "postbuild": "node scripts/stamp-version.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
