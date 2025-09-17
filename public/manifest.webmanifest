@@ -1,14 +1,13 @@
 {
   "name": "TradeLine 24/7",
-  "short_name": "TL24/7",
+  "short_name": "TL247",
   "description": "Your 24/7 Ai Receptionist. Never miss a call. Work while you sleep.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#141414",
-  "theme_color": "#FFB347",
+  "theme_color": "#141414",
   "icons": [
-    { "src": "/assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/assets/brand/OFFICIAL_LOGO.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }
