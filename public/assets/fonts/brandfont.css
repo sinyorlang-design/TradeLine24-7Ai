@@ -1,0 +1,2 @@
+@font-face { font-family:"BrandFont"; src:url("/assets/fonts/BrandFont.woff2") format("woff2"); font-display:swap; }
+:root { --brand-serif:"BrandFont", Georgia, "Times New Roman", serif; }
