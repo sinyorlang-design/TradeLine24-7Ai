@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/smart-build.mjs",
     "start": "node server.mjs",
     "preview": "vite preview --host 0.0.0.0 --port 5000",
     "prebuild": "node -e \"if(process.env.SKIP_VERIFY_CANON===\\\"1\\\")process.exit(0)\" && node scripts/verify-canon.js",
@@ -23,7 +23,8 @@
     "seo": "node scripts/seo-patch.mjs",
     "landing:dev": "npm --prefix landing run dev",
     "landing:build": "npm --prefix landing run build",
-    "landing:preview": "npm --prefix landing run preview"
+    "landing:preview": "npm --prefix landing run preview",
+    "build:client": "vite build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
