@@ -5,13 +5,14 @@ entrypoint = "index.html"
 
 [nix]
 channel = "stable-24_05"
+packages = ["gh"]
 
 [unitTest]
 language = "nodejs"
 
 [deployment]
 deploymentTarget = "gce"
-build = ["sh", "-c", "npm ci && npm run build"]
+build = ["sh", "-c", "npm ci --include=dev && npm run build"]
 run = ["sh", "-c", "node server.mjs"]
 
 [[ports]]
