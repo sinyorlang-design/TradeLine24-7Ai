@@ -4,9 +4,9 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import path from "node:path";
 import fs from "node:fs";
-import fs from "node:fs";
 import { fileURLToPath } from "node:url";
-import { twiml as TwiML, validateRequest } from "twilio";
+import pkg from "twilio";
+const { twiml: TwiML, validateRequest } = pkg;
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -114,8 +114,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const dist = path.join(__dirname, "dist");
 app.use(express.static(dist,{index:false,etag:true,maxAge:"1y"}));
-app.get("/", (_, res) => res.sendFile(path.join(dist, "index.html")));
-app.get("*", (_, res) => res.sendFile(path.join(dist, "index.html")));
+app.get("/__version",(_,res)=>{try{const v=fs.readFileSync(path.join(dist,"__version.json"),"utf8");res.set("Cache-Control","no-store").type("application/json").send(v);}catch{res.status(404).json({});}});
+app.get("*",(_,res)=>{res.set("Cache-Control","no-store");res.sendFile(path.join(dist,"index.html"));});
 
 function buildEmailBody(text, meta) {
   const brand = [
