@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: tradeline24-7
+    env: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: node server.mjs
+    envVars:
+      - key: NODE_VERSION
+        value: 20.19.5
+      - key: HOST
+        value: 0.0.0.0
+    healthCheckPath: /healthz
+    autoDeploy: true
