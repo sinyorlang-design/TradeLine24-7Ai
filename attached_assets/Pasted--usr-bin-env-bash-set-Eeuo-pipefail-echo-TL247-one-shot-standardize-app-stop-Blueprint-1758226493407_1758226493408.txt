@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+echo "=== TL247 one-shot: standardize app, stop Blueprint duplication, trigger Render PR preview ==="
+
+# -------- 0) Repo sanity --------
+git fetch origin --prune || true
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"; cd "$ROOT"
+
+# -------- 1) Pin Node runtime --------
+echo "20.19.0" > .node-version
+
+# -------- 2) Ensure package.json scripts and deps (idempotent) --------
+test -f package.json || { echo "✗ package.json missing"; exit 1; }
+node - <<'NODE'
+const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8'));
+p.type ||= 'module';
+p.scripts ||= {};
+p.scripts.build ||= 'vite build';
+p.scripts.start ||= 'node server.mjs';
+fs.writeFileSync('package.json', JSON.stringify(p,null,2)+'\n');
+NODE
+
+# express + hardening deps as runtime deps (no-op if present)
+npm pkg get dependencies.express >/dev/null 2>&1 || npm i express compression helmet express-rate-limit
+
+# -------- 3) Server: serve /dist, healthz, SPA fallback (idempotent) --------
+if [ ! -f server.mjs ]; then
+  cat > server.mjs <<'JS'
+import express from "express";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import compression from "compression";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+
+const app = express();
+app.use(helmet());
+app.use(compression());
+app.use(rateLimit({ windowMs: 60_000, max: 120 }));
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const dist = path.join(__dirname, "dist");
+
+app.use(express.static(dist, { maxAge: "1y", index: false }));
+
+const SERVICE_NAME = process.env.RENDER_SERVICE_NAME || "TradeLine24/7";
+app.get("/healthz", (_req,res)=>res.status(200).send(`ok:${SERVICE_NAME}`));
+app.get("/readyz", (_req,res)=>res.status(200).send("ready"));
+
+app.use((req,res,next)=>{
+  if (req.method !== "GET") return next();
+  res.sendFile(path.join(dist,"index.html"));
+});
+
+const PORT = process.env.PORT || 5000;
+const HOST = process.env.HOST || "0.0.0.0";
+app.listen(PORT, HOST, () => console.log(`listening on http://${HOST}:${PORT}`));
+JS
+else
+  # add /healthz if missing
+  grep -q 'app.get("/healthz"' server.mjs || \
+    sed -i '1i const SERVICE_NAME = process.env.RENDER_SERVICE_NAME || "TradeLine24/7";\napp.get("/healthz",(_req,res)=>res.status(200).send(`ok:${SERVICE_NAME}`));' server.mjs
+  # add SPA fallback if missing
+  grep -q 'sendFile(.*index.html' server.mjs || cat >> server.mjs <<'JS'
+
+// --- TL247 SPA fallback (idempotent) ---
+import path from "node:path";
+app.use((req,res,next)=>{
+  if (req.method !== "GET") return next();
+  res.sendFile(path.join(process.cwd(),"dist","index.html"));
+});
+JS
+fi
+
+# -------- 4) Neuter Blueprint to stop duplicate services (we use Projects only) --------
+cat > render.yaml <<'YAML'
+# TL247: Blueprint intentionally disabled to prevent duplicate Render services.
+# We manage via Render Projects UI only.
+previews:
+  generation: manual
+YAML
+
+# -------- 5) Build once (smoke) --------
+npm ci --include=dev
+npm run build
+
+# -------- 6) Commit and push on canonical preview branch --------
+BR="render-preview"
+git add -A
+git commit -m "chore(tl247): standardize server, pin node, disable blueprint, build" || true
+git checkout -B "$BR"
+git push -u origin "$BR" --force-with-lease
+
+# -------- 7) Open/repair PR with Manual-Preview triggers --------
+if command -v gh >/dev/null 2>&1; then
+  gh auth status >/dev/null || gh auth login --web
+  gh label create "render-preview" -c '8FB3FF' -d 'Trigger Render PR preview' 2>/dev/null || true
+
+  if gh pr view "$BR" >/dev/null 2>&1; then
+    gh pr edit "$BR" --add-label "render-preview" || true
+    T="$(gh pr view "$BR" --json title --jq .title)"
+    [[ "$T" == *"[render preview]"* ]] || gh pr edit "$BR" --title "$T [render preview]"
+  else
+    gh pr create --base main --head "$BR" \
+      --title "[render preview] TL247 preview" \
+      --body "Manual Render preview: label + title set." \
+      --label "render-preview"
+  fi
+  echo "✓ PR ready; Render Preview will attach after build & /healthz OK."
+  gh pr view "$BR" -w || gh pr view "$BR"
+else
+  echo "⚠ gh not found. Open PR manually: from '$BR' → 'main', title includes '[render preview]', add label 'render-preview'."
+fi
+
+# -------- 8) Print final UI steps to remove dup service --------
+cat <<'UI'
+=== FINAL (Render dashboard) — do once ===
+1) Keep ONLY the Projects service: TradeLine24/7
+2) Delete the Blueprint-managed service: tradeline24-7
+3) Delete the Blueprint environment to prevent re-spawn
+4) In TradeLine24/7 env, ensure:
+   NODE_VERSION=20.19.0
+   HOST=0.0.0.0
+   NODE_ENV=production
+   RENDER_SERVICE_NAME=TradeLine24/7
+5) Health check path: /healthz ; Start command: node server.mjs ; Build: npm ci --include=dev && npm run build
+6) Verify: curl -s https://api.tradeline247.ca/healthz  →  ok:TradeLine24/7
+UI
+
+echo "=== TL247 one-shot: done ==="
