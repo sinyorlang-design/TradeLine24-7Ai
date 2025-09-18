@@ -10,6 +10,7 @@ const { twiml: TwiML, validateRequest } = pkg;
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const SERVICE_NAME = process.env.RENDER_SERVICE_NAME || "TradeLine24/7";
 
 const BASE_URL = process.env.PUBLIC_BASE_URL || "https://api.tradeline247.ca";
 const FORWARD_E164 = process.env.FORWARD_E164 || "+14319900222";
@@ -28,7 +29,7 @@ app.use(helmet());
 app.use(rateLimit({ windowMs: 60_000, max: 120 }));
 
 // Health
-app.get("/healthz", (_,res)=>res.status(200).send("ok"));
+app.get("/healthz", (_,res)=>res.status(200).send(`ok:${SERVICE_NAME}`));
 app.get("/readyz",  (_,res)=>res.status(200).json({ ready:true, forward: FORWARD_E164 }));
 
 // Twilio debug surface (lightweight)
