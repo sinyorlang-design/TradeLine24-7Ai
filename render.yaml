@@ -18,3 +18,18 @@ services:
     buildCommand: npm ci --include=dev && npm run build
     staticPublishPath: dist
     pullRequestPreviewsEnabled: true
+# root of render.yaml
+previews:
+  generation: manual
+
+services:
+  - type: web
+    name: tradeline24-7
+    env: node
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: node server.mjs
+    healthCheckPath: /healthz
+    autoDeploy: true
+
+
+    
