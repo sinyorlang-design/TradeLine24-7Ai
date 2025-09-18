@@ -1,0 +1,17 @@
+name: guardrails
+on: [pull_request]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ban starter template text
+        run: |
+          if grep -RniE "React \+ (Vite|TypeScript) \+ Replit" . ; then
+            echo "Starter template text found. Failing build."; exit 1
+          fi
+      - name: Build check
+        run: |
+          npm ci --include=dev
+          npm run build
+          test -f dist/index.html

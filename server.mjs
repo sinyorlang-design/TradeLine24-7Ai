@@ -31,6 +31,10 @@ app.use(rateLimit({ windowMs: 60_000, max: 120 }));
 app.get("/healthz", (_,res)=>res.status(200).send("ok"));
 app.get("/readyz",  (_,res)=>res.status(200).json({ ready:true, forward: FORWARD_E164 }));
 
+// Twilio debug surface (lightweight)
+let _lastRecording = { at: null, meta: null, error: null };
+app.get("/twilioz", (_,res)=> res.json({ last:_lastRecording }));
+
 // Twilio signature verification middleware
 function verifyTwilio(req, res, next) {
   try {
@@ -61,6 +65,7 @@ app.post("/voice/answer", verifyTwilio, (req, res) => {
 
 // Recording callback: fetch MP3 -> Whisper -> Resend email
 app.post("/voice/recording", verifyTwilio, async (req, res) => {
+  _lastRecording = { at: new Date().toISOString(), meta: req.body, error: null };
   res.sendStatus(200); // ack fast
   try {
     const { RecordingUrl, RecordingSid, CallSid, From, To, CallDuration } = req.body || {};
