@@ -1,35 +1,4 @@
-services:
-  - type: web
-    name: tradeline247-api
-    env: node
-    plan: starter
-    buildCommand: npm ci --include=dev && npm run build
-    startCommand: node server.mjs
-    healthCheckPath: /healthz
-    autoDeploy: true
-    pullRequestPreviewsEnabled: true
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: HOST
-        value: 0.0.0.0
-  - type: static
-    name: tradeline247-web
-    buildCommand: npm ci --include=dev && npm run build
-    staticPublishPath: dist
-    pullRequestPreviewsEnabled: true
-# root of render.yaml
+# TL247: Blueprint intentionally disabled to prevent duplicate Render services.
+# We manage via Render Projects UI only.
 previews:
   generation: manual
-
-services:
-  - type: web
-    name: tradeline24-7
-    env: node
-    buildCommand: npm ci --include=dev && npm run build
-    startCommand: node server.mjs
-    healthCheckPath: /healthz
-    autoDeploy: true
-
-
-    
