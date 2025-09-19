@@ -1,4 +1,13 @@
-# TL247: Blueprint intentionally disabled to prevent duplicate Render services.
-# Manage via Render Projects only.
 previews:
   generation: manual
+
+services:
+  - type: web
+    name: tradeline24-7
+    env: node
+    region: oregon
+    plan: standard
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: node server.mjs
+    healthCheckPath: /healthz
+    autoDeploy: true
