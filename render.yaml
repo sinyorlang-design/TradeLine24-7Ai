@@ -1,4 +1,4 @@
 # TL247: Blueprint intentionally disabled to prevent duplicate Render services.
-# We manage via Render Projects UI only.
+# Manage via Render Projects only.
 previews:
   generation: manual
