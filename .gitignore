@@ -74,10 +74,14 @@ web_modules/
 
 # dotenv environment variable files
 .env
+.env.*
 .env.development.local
 .env.test.local
 .env.production.local
 .env.local
+.git-credentials
+.netrc
+.npmrc
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

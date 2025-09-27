@@ -1,16 +1,24 @@
 // server.mjs
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import fetch from "node-fetch";
 import OpenAI from "openai";
 import { Resend } from "resend";
+import twilio from "twilio";
+import helmet from "helmet";
+import compression from "compression";
+import rateLimit from "express-rate-limit";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+// Behind Cloudflare/Render so Express respects X-Forwarded-Proto for webhook validation
+app.set("trust proxy", 1);
 const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || "0.0.0.0";
 const dist = path.join(__dirname, "dist");
+const distIndex = path.join(dist, "index.html");
 
 // Initialize services
 const openai = new OpenAI({
@@ -20,15 +28,46 @@ const openai = new OpenAI({
 const resend = new Resend(process.env.RESEND_API_KEY || "");
 
 // Middleware - MUST be before routes
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(compression());
 app.use(express.urlencoded({ extended: false })); // Parse Twilio form posts
 app.use(express.json()); // Parse JSON requests
+
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+app.use("/api", apiLimiter);
+app.use("/auth", authLimiter);
+
+const twilioWebhook = twilio.webhook({
+  validate: true,
+  protocol: "https",
+  host: process.env.PUBLIC_HOSTNAME
+});
 
 // Static assets (serve index manually to control SPA fallback)
 app.use(express.static(dist, { maxAge: "1h", index: false }));
 
 // Health endpoints for deploys
 app.get("/healthz", (_req, res) => res.status(200).send("ok"));
-app.get("/readyz", (_req, res) => res.status(200).send("ready"));
+app.get("/readyz", (_req, res) => {
+  if (fs.existsSync(distIndex)) {
+    return res.status(200).send("ready");
+  }
+
+  return res.status(503).send("not ready");
+});
 
 // Locale configuration with voice mappings
 const LOCALE_CONFIG = {
@@ -53,7 +92,7 @@ function getLocaleConfig(countryCode) {
 }
 
 // Twilio inbound voice handler with multi-locale support
-app.post("/voice/answer", (req, res) => {
+app.post("/voice/answer", twilioWebhook, (req, res) => {
   try {
     const fromCountry = req.body.FromCountry || "US";
     const config = getLocaleConfig(fromCountry);
@@ -90,7 +129,7 @@ app.post("/voice/answer", (req, res) => {
 });
 
 // Recording status callback with full processing
-app.post("/voice/recording-status", async (req, res) => {
+app.post("/voice/recording-status", twilioWebhook, async (req, res) => {
   // Respond immediately to Twilio
   res.sendStatus(200);
   
